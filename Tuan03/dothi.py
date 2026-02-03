@@ -104,4 +104,5 @@ nx.draw_networkx_edges(
 )
 
 plt.title("Đồ thị và đường đi BFS từ A đến D", fontsize=14)
-plt.show()
+plt.savefig('graph_bfs_path.png')
+print("Hình ảnh đã được lưu thành file 'graph_bfs_path.png'")
