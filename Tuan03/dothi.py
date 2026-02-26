@@ -1,108 +1,102 @@
+import pprint
 G = {
     'A': ['B', 'C', 'F'],
     'B': ['A', 'C', 'E', 'F'],
     'C': ['A', 'B', 'D', 'F'],
-    'D': ['C', 'E', 'F'],
+    'D': ['C', 'F'],
     'E': ['B', 'D', 'F'],
-    'F': ['A', 'B', 'C', 'D', 'E']
+    'F': ['A', 'C', 'E']
 }
-import pprint
+
+def tinh_bac(G):
+    bac = {}
+    for dinh in G:
+        bac[dinh] = len(G[dinh])
+    return bac
+bac_cac_dinh = tinh_bac(G)
+print("Bậc của từng đỉnh:")
+for dinh, b in bac_cac_dinh.items():
+    print(f"{dinh}: {b}")
+bac_max = max(bac_cac_dinh.values())
+print("Bậc cao nhất của đồ thị:", bac_max)
 
 def BFS(G, start, goal):
-    """
-    return: 
-    + mảng path: path[a] = b (muốn tới a thì đi qua b)
-    + None: nếu start hoặc goal không hợp lệ
-    """
+    result = None
     if G.get(start) is None or G.get(goal) is None:
-        return None
+        result = None
     else:
-        path = {}     # path[a] = b : muốn tới a thì đi qua b
+        path = {}
         s_open   = []
         s_closed = []
-        
-        # đưa start vào open
         s_open.append(start)    
         path[start] = None
-
-        while len(s_open) > 0:
-            current = s_open.pop(0)   # lấy đỉnh đầu hàng đợi
-            s_closed.append(current)
-
-            # nếu đã tới goal thì dừng
-            if current == goal:
+        while len(s_open)>0:
+            u = s_open.pop(0)    
+            s_closed.append(u)
+            if u == goal:
                 break
-
-            # duyệt các đỉnh kề
-            for neighbor in G[current]:
-                if neighbor not in s_open and neighbor not in s_closed:
-                    s_open.append(neighbor)
-                    path[neighbor] = current
-        
-        return path
-def trace_path(path, start, goal):
-    if goal not in path:
-        return []   # không có đường đi
-    
-    result = []
-    current = goal
-    while current is not None:
-        result.append(current)
-        current = path[current]
-    
-    result.reverse()
-    return result
-start = 'A'
-goal = 'D'
-
-path = BFS(G, start, goal)
-print("Bảng path:")
+            for v in G[u]:
+                if v not in s_open and v not in s_closed:
+                    s_open.append(v)
+                    path[v] = u
+        pass
+    return path
+path = BFS(G, "A", "D")
 pprint.pprint(path)
-
-duong_di = trace_path(path, start, goal)
-print("Đường đi từ", start, "đến", goal, "là:", duong_di)
+def find_path(path, start, goal):
+    result = []
+    if start == goal:
+        return [start]
+    
+    if goal not in path:
+        return []
+    
+    cur = goal
+    while cur != start:
+        result.append(cur)
+        cur = path.get(cur)
+        
+        if cur is None:
+            return []
+    
+    result.append(start)
+    result.reverse()
+    
+    return result
+duong_di = find_path(path, "A", "D")  
+print(duong_di)
 import networkx as nx
 import matplotlib.pyplot as plt
-
-# Khai báo đồ thị
-G = nx.Graph()
-
-edges = [
-    ('A', 'B'), ('A', 'C'), ('A', 'F'),
-    ('B', 'C'), ('B', 'E'), ('B', 'F'),
-    ('C', 'D'), ('C', 'F'),
-    ('D', 'E'), ('D', 'F'),
-    ('E', 'F')
-]
-
-G.add_edges_from(edges)
-
-# Đường đi BFS tìm được
-path = ['A', 'C', 'D']
-path_edges = list(zip(path, path[1:]))
-
-# Vị trí các đỉnh
-pos = nx.spring_layout(G, seed=42)
-
-# Vẽ toàn bộ đồ thị
-nx.draw(
-    G, pos,
-    with_labels=True,
-    node_size=2000,
-    node_color='lightblue',
-    font_size=12,
-    edge_color='gray',
-    width=2
-)
-
-# Vẽ nổi bật đường đi BFS
-nx.draw_networkx_edges(
-    G, pos,
-    edgelist=path_edges,
-    edge_color='red',
-    width=4
-)
-
-plt.title("Đồ thị và đường đi BFS từ A đến D", fontsize=14)
-plt.savefig('graph_bfs_path.png')
-print("Hình ảnh đã được lưu thành file 'graph_bfs_path.png'")
+def ve_do_thi_co_duong_di(G, path):
+    graph = nx.Graph()
+    for u in G:
+        for v in G[u]:
+            graph.add_edge(u, v)
+    pos = nx.spring_layout(graph, seed=42)
+    nx.draw(
+        graph,
+        pos,
+        with_labels=True,
+        node_size=1500,
+        alpha=0.6
+    )
+    if path and len(path) > 1:
+        edges_path = []
+        for i in range(len(path)-1):
+            edges_path.append((path[i], path[i+1]))
+        nx.draw_networkx_edges(
+            graph,
+            pos,
+            edgelist=edges_path,
+            width=3
+        )
+        nx.draw_networkx_nodes(
+            graph,
+            pos,
+            nodelist=path,
+            node_size=1700
+        )
+    plt.title("Đồ thị và đường đi BFS")
+    plt.savefig("duongdi.png")
+    plt.close()
+ve_do_thi_co_duong_di(G, duong_di)
